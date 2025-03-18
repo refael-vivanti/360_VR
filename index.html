@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Jump Buttons</title>
+    <script>
+        var player;
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('youtube-player', {
+                height: '360',
+                width: '640',
+                videoId: '9Mj60dBQlIU',
+                events: {
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.PLAYING) {
+                checkTime();
+            }
+        }
+
+        function checkTime() {
+            var time = player.getCurrentTime();
+            document.getElementById("btn1").style.display = (time >= 3 && time <= 7) ? "block" : "none";
+            document.getElementById("btn2").style.display = (time >= 24 && time <= 28) ? "block" : "none";
+            setTimeout(checkTime, 500);
+        }
+
+        function jumpTo(time) {
+            player.seekTo(time, true);
+        }
+    </script>
+    <style>
+        #button-container {
+            position: relative;
+            width: 640px;
+            margin: auto;
+        }
+        .jump-button {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            background-color: red;
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="button-container">
+        <div id="youtube-player"></div>
+        <button id="btn1" class="jump-button" onclick="jumpTo(22)">Jump to 0:22</button>
+        <button id="btn2" class="jump-button" onclick="jumpTo(55)">Jump to 0:55</button>
+    </div>
+    <script src="https://www.youtube.com/iframe_api"></script>
+</body>
+</html>
