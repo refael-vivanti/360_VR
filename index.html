@@ -54,6 +54,12 @@
         }
 
         function onPlayerReady(event) {
+            // Set player size explicitly
+            const container = document.getElementById('video-container');
+            const width = container.offsetWidth;
+            const height = container.offsetHeight;
+            player.setSize(width, height);
+
             document.getElementById('btn1').addEventListener('click', () => player.seekTo(22));
             document.getElementById('btn2').addEventListener('click', () => player.seekTo(55));
             
