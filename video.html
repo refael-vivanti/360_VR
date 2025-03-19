@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Interactive Video</title>
+    <style>
+        /* Video container setup */
+        #video-container {
+            position: relative;
+            width: 800px;
+            height: 450px;
+            margin: 20px auto;
+        }
+
+        /* YouTube player styling */
+        #player {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Button styling */
+        .video-button {
+            position: absolute;
+            display: none;
+            background: rgba(255, 68, 68, 0.8);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 10000;
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+        }
+
+        /* Position first button */
+        #btn1 {
+            top: 40%;
+            left: 30%;
+        }
+
+        /* Position second button */
+        #btn2 {
+            top: 40%;
+            left: 60%;
+        }
+
+        /* Fullscreen styling */
+        #video-container:-webkit-full-screen,
+        #video-container:-moz-full-screen,
+        #video-container:-ms-fullscreen,
+        #video-container:fullscreen {
+            width: 100vw !important;
+            height: 100vh !important;
+        }
+
+        #video-container:-webkit-full-screen #player,
+        #video-container:-moz-full-screen #player,
+        #video-container:-ms-fullscreen #player,
+        #video-container:fullscreen #player {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Custom fullscreen button */
+        #fs-button {
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- Video container with buttons -->
+    <div id="video-container">
+        <div id="player"></div>
+        <button class="video-button" id="btn1">קפוץ ל-0:22</button>
+        <button class="video-button" id="btn2">קפוץ ל-0:55</button>
+        <button id="fs-button">מסך מלא</button>
+    </div>
+
+    <script>
+        // YouTube Player API setup
+        let player;
+        
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                videoId: '9Mj60dBQlIU',
+                playerVars: {
+                    controls: 1,
+                    modestbranding: 1,
+                    rel: 0
+                },
+                events: {
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+
+        // Handle video state changes
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.PLAYING) {
+                setInterval(checkTime, 100);
+            }
+        }
+
+        // Check current video time
+        function checkTime() {
+            const currentTime = player.getCurrentTime();
+            
+            // Button 1: 3-7 seconds
+            document.getElementById('btn1').style.display = 
+                (currentTime >= 3 && currentTime <= 7) ? 'block' : 'none';
+            
+            // Button 2: 24-28 seconds
+            document.getElementById('btn2').style.display = 
+                (currentTime >= 24 && currentTime <= 28) ? 'block' : 'none';
+        }
+
+        // Load YouTube API
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        document.body.appendChild(tag);
+
+        // Button click handlers
+        document.getElementById('btn1').addEventListener('click', () => player.seekTo(22));
+        document.getElementById('btn2').addEventListener('click', () => player.seekTo(55));
+
+        // Fullscreen toggle function
+        function toggleFullscreen() {
+            const container = document.getElementById('video-container');
+            if (!document.fullscreenElement) {
+                if (container.requestFullscreen) {
+                    container.requestFullscreen();
+                } else if (container.mozRequestFullScreen) { // Firefox
+                    container.mozRequestFullScreen();
+                } else if (container.webkitRequestFullscreen) { // Chrome, Safari and Opera
+                    container.webkitRequestFullscreen();
+                } else if (container.msRequestFullscreen) { // IE/Edge
+                    container.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.mozCancelFullScreen) { // Firefox
+                    document.mozCancelFullScreen();
+                } else if (document.webkitExitFullscreen) { // Chrome, Safari and Opera
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { // IE/Edge
+                    document.msExitFullscreen();
+                }
+            }
+        }
+
+        // Add event listener to fullscreen button
+        document.getElementById('fs-button').addEventListener('click', toggleFullscreen);
+
+        // Handle fullscreen changes
+        document.addEventListener('fullscreenchange', adjustFullscreen);
+        document.addEventListener('webkitfullscreenchange', adjustFullscreen);
+        document.addEventListener('mozfullscreenchange', adjustFullscreen);
+        document.addEventListener('MSFullscreenChange', adjustFullscreen);
+
+        function adjustFullscreen() {
+            const container = document.getElementById('video-container');
+            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || 
+                                 document.mozFullScreenElement || document.msFullscreenElement;
+            
+            if (isFullscreen) {
+                container.style.width = '100vw';
+                container.style.height = '100vh';
+            } else {
+                container.style.width = '800px';
+                container.style.height = '450px';
+            }
+        }
+    </script>
+</body>
+</html>
