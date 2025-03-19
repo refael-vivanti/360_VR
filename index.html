@@ -36,6 +36,8 @@
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
         let player;
+        let xrSession = null;
+
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('player', {
                 height: '100%',
@@ -54,17 +56,11 @@
         }
 
         function onPlayerReady(event) {
-            // Set player size explicitly
-            const container = document.getElementById('video-container');
-            const width = container.offsetWidth;
-            const height = container.offsetHeight;
-            player.setSize(width, height);
-
             document.getElementById('btn1').addEventListener('click', () => player.seekTo(22));
             document.getElementById('btn2').addEventListener('click', () => player.seekTo(55));
             
             if ('xr' in navigator) {
-                document.getElementById('vr-button').addEventListener('click', activateVR);
+                document.getElementById('vr-button').addEventListener('click', toggleVR);
             } else {
                 document.getElementById('vr-button').style.display = 'none';
             }
@@ -74,13 +70,37 @@
             console.error("YouTube Player Error:", event);
         }
 
-        async function activateVR() {
+        async function toggleVR() {
+            if (xrSession) {
+                // End the VR session
+                await xrSession.end();
+            } else {
+                // Start a new VR session
+                await startVR();
+            }
+        }
+
+        async function startVR() {
             try {
                 const session = await navigator.xr.requestSession('immersive-vr');
-                console.log('VR session started');
+                xrSession = session;
+
+                // Add event listeners for session end
+                xrSession.addEventListener('end', () => {
+                    xrSession = null;
+                });
+
+                // Start rendering loop
+                startRendering(xrSession);
+
             } catch (err) {
                 console.error('Error starting VR session:', err);
             }
+        }
+
+        function startRendering(session) {
+            // Add your rendering logic here
+            console.log('VR rendering started');
         }
     </script>
 </body>
