@@ -2,112 +2,68 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>WebXR YouTube Video Player</title>
+    <title>YouTube Video Player with VR Buttons</title>
     <style>
-        body { margin: 0; }
-        canvas { display: block; }
-        #enter-vr { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); }
+        body { margin: 0; overflow: hidden; }
+        #video-container { position: relative; width: 100vw; height: 100vh; }
+        #player { width: 100%; height: 100%; }
+        .button {
+            position: absolute;
+            padding: 10px 20px;
+            background-color: rgba(255,255,255,0.7);
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #btn1 { top: 20px; left: 20px; }
+        #btn2 { top: 20px; right: 20px; }
+        #vr-button { bottom: 20px; left: 50%; transform: translateX(-50%); }
     </style>
 </head>
 <body>
-    <canvas id="canvas"></canvas>
-    <button id="enter-vr">Enter VR</button>
+    <div id="video-container">
+        <div id="player"></div>
+        <button id="btn1" class="button">קפוץ ל-0:22</button>
+        <button id="btn2" class="button">קפוץ ל-0:55</button>
+        <button id="vr-button" class="button">הפעל VR</button>
+    </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
     <script>
-        let scene, camera, renderer, video, videoTexture, videoMaterial, videoScreen;
-        let button1, button2;
-        let controller1, controller2;
-
-        init();
-
-        function init() {
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.z = 5;
-
-            renderer = new THREE.WebGLRenderer({canvas: document.getElementById('canvas')});
-            renderer.setSize(window.innerWidth, window.innerHeight);
-
-            // Create video element and texture
-            video = document.createElement('video');
-            video.src = 'https://www.youtube.com/watch?v=9Mj60dBQlIU'; // Replace with your video URL
-            video.crossOrigin = 'anonymous';
-            video.loop = true;
-            videoTexture = new THREE.VideoTexture(video);
-            videoMaterial = new THREE.MeshBasicMaterial({map: videoTexture});
-
-            // Create video screen
-            const geometry = new THREE.PlaneGeometry(16, 9);
-            videoScreen = new THREE.Mesh(geometry, videoMaterial);
-            scene.add(videoScreen);
-
-            // Create buttons
-            const buttonGeometry = new THREE.PlaneGeometry(1, 0.5);
-            const button1Material = new THREE.MeshBasicMaterial({color: 0xff0000});
-            const button2Material = new THREE.MeshBasicMaterial({color: 0x00ff00});
-
-            button1 = new THREE.Mesh(buttonGeometry, button1Material);
-            button1.position.set(-2, -2, 0);
-            scene.add(button1);
-
-            button2 = new THREE.Mesh(buttonGeometry, button2Material);
-            button2.position.set(2, -2, 0);
-            scene.add(button2);
-
-            // Set up VR
-            renderer.xr.enabled = true;
-            document.body.appendChild(renderer.domElement);
-
-            // VR Button
-            document.getElementById('enter-vr').addEventListener('click', () => {
-                renderer.xr.getSession() ? renderer.xr.end() : renderer.xr.getSession();
+        let player;
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                videoId: '9Mj60dBQlIU',
+                playerVars: {
+                    'playsinline': 1,
+                    'controls': 1,
+                    'rel': 0
+                },
+                events: {
+                    'onReady': onPlayerReady
+                }
             });
-
-            // Controllers
-            controller1 = renderer.xr.getController(0);
-            controller2 = renderer.xr.getController(1);
-            scene.add(controller1);
-            scene.add(controller2);
-
-            controller1.addEventListener('selectstart', onSelectStart);
-            controller2.addEventListener('selectstart', onSelectStart);
-
-            animate();
         }
 
-        function onSelectStart(event) {
-            const controller = event.target;
-            const intersects = getIntersections(controller);
-
-            if (intersects.length > 0) {
-                const intersection = intersects[0];
-                if (intersection.object === button1) {
-                    video.currentTime = 22; // Jump to 22 seconds
-                } else if (intersection.object === button2) {
-                    video.currentTime = 55; // Jump to 55 seconds
-                }
+        function onPlayerReady(event) {
+            document.getElementById('btn1').addEventListener('click', () => player.seekTo(22));
+            document.getElementById('btn2').addEventListener('click', () => player.seekTo(55));
+            
+            if ('xr' in navigator) {
+                document.getElementById('vr-button').addEventListener('click', activateVR);
+            } else {
+                document.getElementById('vr-button').style.display = 'none';
             }
         }
 
-        function getIntersections(controller) {
-            const tempMatrix = new THREE.Matrix4();
-            tempMatrix.identity().extractRotation(controller.matrixWorld);
-
-            const raycaster = new THREE.Raycaster();
-            raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
-            raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix);
-
-            return raycaster.intersectObjects([button1, button2]);
-        }
-
-        function animate() {
-            renderer.setAnimationLoop(() => {
-                if (video.readyState === video.HAVE_ENOUGH_DATA) {
-                    videoTexture.needsUpdate = true;
-                }
-                renderer.render(scene, camera);
-            });
+        async function activateVR() {
+            try {
+                const session = await navigator.xr.requestSession('immersive-vr');
+                // כאן תוכל להוסיף לוגיקה נוספת לטיפול בסשן VR
+                console.log('VR session started');
+            } catch (err) {
+                console.error('Error starting VR session:', err);
+            }
         }
     </script>
 </body>
